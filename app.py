@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
+import os
 from sklearn.preprocessing import LabelEncoder
 from flask_cors import CORS
 
@@ -9,8 +10,11 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for cross-origin requests
 
 # Load the trained model
-with app.app_context():
-    model = joblib.load('motorcycle_loan_model.pkl')  # Ensure the path is correct
+model_path = 'motorcycle_loan_model.pkl'
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Model file not found: {model_path}")
+
+model = joblib.load(model_path)
 
 # Initialize LabelEncoder for 'Loan Approval Status' column
 label_encoder = LabelEncoder()
@@ -63,5 +67,6 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
-    # Run the app on a specific IP (replace with your local IP address if necessary)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Use dynamic port for deployment, with a default of 5000 for local testing
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
